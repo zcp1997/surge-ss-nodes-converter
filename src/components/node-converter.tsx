@@ -131,7 +131,8 @@ export default function NodeConverter() {
         port: n.port,
         cipher: n.encryptMethod,
         password: n.password,
-        udp: true,
+        'client-fingerprint': 'chrome',
+        tfo: false,
       }
       if (n.obfs === 'http' || n.obfs === 'tls') {
         proxy.plugin = 'obfs'

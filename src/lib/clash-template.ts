@@ -11,6 +11,8 @@ export type ClashProxy = {
     mode?: 'http' | 'tls'
     host?: string
   }
+  'client-fingerprint'?: string
+  tfo?: boolean
 }
 
 /**
@@ -98,28 +100,35 @@ export class ClashTemplate {
   }
 
   private static proxyToYaml(p: ClashProxy): string {
-    const lines: string[] = []
-    lines.push(`- name: ${ClashTemplate.escapeYaml(p.name)}`)
-    lines.push(`  type: ${p.type}`)
-    lines.push(`  server: ${ClashTemplate.escapeYaml(p.server)}`)
-    lines.push(`  port: ${p.port}`)
-    lines.push(`  cipher: ${ClashTemplate.escapeYaml(p.cipher)}`)
-    lines.push(`  password: ${ClashTemplate.escapeYaml(p.password)}`)
-    lines.push(`  udp: ${p.udp === false ? 'false' : 'true'}`)
+    const fields: string[] = []
+
+    const pushKV = (k: string, v: string | number | boolean | undefined | null) => {
+      if (v === undefined || v === null) return
+      fields.push(`${k}: ${ClashTemplate.escapeYaml(v)}`)
+    }
+
+    // 顺序按用户期望
+    pushKV('name', p.name)
+    pushKV('server', p.server)
+    pushKV('port', p.port)
+    pushKV('client-fingerprint', p['client-fingerprint'] ?? 'chrome')
+    pushKV('type', p.type)
+    pushKV('cipher', p.cipher)
+    pushKV('password', p.password)
+    pushKV('tfo', p.tfo ?? false)
 
     if (p.plugin === 'obfs' && p['plugin-opts']) {
-      lines.push('  plugin: obfs')
-      lines.push('  plugin-opts:')
-      if (p['plugin-opts'].mode) {
-        lines.push(`    mode: ${ClashTemplate.escapeYaml(p['plugin-opts'].mode)}`)
-      }
-      if (p['plugin-opts'].host) {
-        lines.push(`    host: ${ClashTemplate.escapeYaml(p['plugin-opts'].host)}`)
+      pushKV('plugin', 'obfs')
+      const pluginFields: string[] = []
+      if (p['plugin-opts'].mode) pluginFields.push(`mode: ${ClashTemplate.escapeYaml(p['plugin-opts'].mode)}`)
+      if (p['plugin-opts'].host) pluginFields.push(`host: ${ClashTemplate.escapeYaml(p['plugin-opts'].host)}`)
+      if (pluginFields.length > 0) {
+        fields.push(`plugin-opts: {${pluginFields.join(', ')}}`)
       }
     }
 
-    // 缩进到 proxies: 之下，YAML 需要在 key 下至少多两个空格
-    return lines.map((l) => `  ${l}`).join('\n')
+    // 生成单行 inline map，并在前面缩进两个空格，确保在 proxies: 下是有效列表项
+    return `  - {${fields.join(', ')}}`
   }
 
   private static escapeYaml(value: string | number | boolean | undefined | null): string {
