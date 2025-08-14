@@ -352,6 +352,11 @@ export function validateNodeConfig(nodeConfig: string): { isValid: boolean; erro
       errors.push(`不支持的混淆方法：${obfs}。支持的方法：${SUPPORTED_OBFS_METHODS.join(', ')}`);
     }
 
+    // 若存在 obfsHost 但没有 obfs，也应提示
+    if (obfsHost && !obfs) {
+      errors.push('提供了 obfs-host 但未指定 obfs 类型');
+    }
+
     return { isValid: errors.length === 0, errors };
   } catch {
     errors.push('配置解析失败：请检查配置格式');

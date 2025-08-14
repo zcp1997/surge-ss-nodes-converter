@@ -21,6 +21,7 @@ import {
   Code2,
 } from "lucide-react"
 import { parseSurgeNodes, convertNodesToSSUrls, type SurgeNode } from "@/lib/surge-parser"
+import { type ClashProxy } from "@/lib/clash-template"
 import { cn } from "@/lib/utils"
 
 export default function NodeConverter() {
@@ -122,8 +123,8 @@ export default function NodeConverter() {
     if (!results?.success.length) return
 
     // 将解析成功的 Surge 节点映射为 Clash proxies（仅 ss 协议）
-    const proxies = results.success.map((n) => {
-      const proxy: any = {
+    const proxies: ClashProxy[] = results.success.map((n) => {
+      const proxy: ClashProxy = {
         name: n.name,
         type: 'ss',
         server: n.server,
@@ -132,12 +133,10 @@ export default function NodeConverter() {
         password: n.password,
         udp: true,
       }
-      if (n.obfs) {
+      if (n.obfs === 'http' || n.obfs === 'tls') {
         proxy.plugin = 'obfs'
         proxy['plugin-opts'] = { mode: n.obfs }
-        if ((n as any).obfsHost) {
-          proxy['plugin-opts'].host = (n as any).obfsHost
-        }
+        if (n.obfsHost) proxy['plugin-opts'].host = n.obfsHost
       }
       return proxy
     })
