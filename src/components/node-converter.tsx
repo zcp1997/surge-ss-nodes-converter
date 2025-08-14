@@ -142,17 +142,16 @@ export default function NodeConverter() {
     })
 
     try {
-      // 通过 GET 生成可直接访问的链接：/api/clash?proxies=base64(json)
-      const json = JSON.stringify(proxies)
-      // 使用 TextEncoder 将 UTF-8 字符串转换为字节，再进行 base64 编码，避免使用过时的 unescape
-      const utf8Bytes = new TextEncoder().encode(json)
-      let binary = ''
-      for (let i = 0; i < utf8Bytes.length; i++) {
-        binary += String.fromCharCode(utf8Bytes[i])
-      }
-      const base64 = btoa(binary)
+      // 使用短 token 方案，避免 URL 过长
+      const res = await fetch('/api/clash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proxies }),
+      })
+      if (!res.ok) throw new Error('生成 token 失败')
+      const data: { token: string } = await res.json()
       const current = window.location.origin
-      const url = `${current}/api/clash?proxies=${encodeURIComponent(base64)}`
+      const url = `${current}/api/clash?t=${encodeURIComponent(data.token)}`
 
       await navigator.clipboard.writeText(url)
       window.open(url, '_blank')
