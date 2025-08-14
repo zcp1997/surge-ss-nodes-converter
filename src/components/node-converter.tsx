@@ -118,6 +118,51 @@ export default function NodeConverter() {
     }
   }
 
+  const handleGenerateClashConfig = async () => {
+    if (!results?.success.length) return
+
+    // 将解析成功的 Surge 节点映射为 Clash proxies（仅 ss 协议）
+    const proxies = results.success.map((n) => {
+      const proxy: any = {
+        name: n.name,
+        type: 'ss',
+        server: n.server,
+        port: n.port,
+        cipher: n.encryptMethod,
+        password: n.password,
+        udp: true,
+      }
+      if (n.obfs) {
+        proxy.plugin = 'obfs'
+        proxy['plugin-opts'] = { mode: n.obfs }
+        if ((n as any).obfsHost) {
+          proxy['plugin-opts'].host = (n as any).obfsHost
+        }
+      }
+      return proxy
+    })
+
+    try {
+      // 通过 GET 生成可直接访问的链接：/api/clash?proxies=base64(json)
+      const json = JSON.stringify(proxies)
+      // 使用 TextEncoder 将 UTF-8 字符串转换为字节，再进行 base64 编码，避免使用过时的 unescape
+      const utf8Bytes = new TextEncoder().encode(json)
+      let binary = ''
+      for (let i = 0; i < utf8Bytes.length; i++) {
+        binary += String.fromCharCode(utf8Bytes[i])
+      }
+      const base64 = btoa(binary)
+      const current = window.location.origin
+      const url = `${current}/api/clash?proxies=${encodeURIComponent(base64)}`
+
+      await navigator.clipboard.writeText(url)
+      window.open(url, '_blank')
+      showSuccessMessage('Clash 配置链接已复制并在新标签打开')
+    } catch (err) {
+      console.error('生成 Clash 配置失败:', err)
+    }
+  }
+
   const handleClear = () => {
     setInput("")
     setResults(null)
@@ -317,6 +362,16 @@ export default function NodeConverter() {
                       >
                         <Link className="w-3 h-3" />
                         订阅链接
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateClashConfig}
+                        className="h-8 px-3 py-1 text-xs text-white/80 hover:text-white hover:bg-white/10 flex items-center gap-1"
+                        title="生成 Clash 配置文件"
+                      >
+                        <Code2 className="w-3 h-3" />
+                        Clash 配置
                       </Button>
                     </div>
                   )}

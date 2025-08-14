@@ -16,9 +16,9 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Surge Shadowsocks 转换器",
-  description: "将 Surge 配置的 Shadowsocks 节点转换为 base64 编码格式，支持批量转换和导出",
-  keywords: ["Surge", "Shadowsocks", "SS", "节点转换", "Base64", "代理"],
+  title: "Surge SS Nodes Converter",
+  description: "Convert Surge SS nodes to V2Ray or Clash format",
+  keywords: ["Surge", "Shadowsocks", "SS", "Clash", "YAML", "Proxy", "V2Ray"],
 }
 
 export default function RootLayout({
