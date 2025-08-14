@@ -13,13 +13,24 @@ export async function GET(request: NextRequest) {
     const decodedUrls = decodeURIComponent(urls);
     const urlList = decodedUrls.split('\n').filter(url => url.trim());
     
-    // 直接返回URL列表，因为convertToSSUrl已经正确编码了节点名称
-    const subscriptionContent = urlList.join('\n');
+    // 确保节点名称部分保持 URL 编码格式
+    const encodedUrlList = urlList.map(url => {
+      if (url.includes('#')) {
+        const [baseUrl, nodeName] = url.split('#');
+        // 重新编码节点名称，确保显示为 URL 编码格式
+        const reEncodedNodeName = encodeURIComponent(decodeURIComponent(nodeName));
+        return `${baseUrl}#${reEncodedNodeName}`;
+      }
+      return url;
+    });
+    
+    const subscriptionContent = encodedUrlList.join('\n');
     
     return new NextResponse(subscriptionContent, {
       status: 200,
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Type': 'text/plain; charset=ascii',
+        'Content-Transfer-Encoding': 'binary',
         'Cache-Control': 'no-cache',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',

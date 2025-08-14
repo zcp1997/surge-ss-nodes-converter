@@ -186,7 +186,7 @@ export default function NodeConverter() {
                 <div className="glass-button rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Code2 className="w-4 h-4 text-orange-300" />
-                    <span className="font-medium text-white">带混淆格式</span>
+                    <span className="font-medium text-white">obfs混淆格式</span>
                   </div>
                   <code className="text-xs text-white/80 font-mono break-all">
                     🇭🇰 HKG 01 = ss, example.com, 20001, encrypt-method=aes-128-gcm, password=1234567,
