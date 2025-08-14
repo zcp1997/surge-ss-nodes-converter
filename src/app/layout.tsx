@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Surge 节点转换器 | SS 节点 Base64 转换工具",
+  title: "Surge Shadowsocks 转换器",
   description: "将 Surge 配置的 Shadowsocks 节点转换为 base64 编码格式，支持批量转换和导出",
   keywords: ["Surge", "Shadowsocks", "SS", "节点转换", "Base64", "代理"],
 }
