@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ClashTemplate, type ClashProxy } from '@/lib/clash-template'
 import { randomUUID } from 'crypto'
+import YAML from 'yaml'
 
 // 简易内存存储（含 TTL），短期缓存 token -> { payload(JSON), expiresAt }
 // 注意：无持久化，仅为解决长链接问题
@@ -77,6 +78,9 @@ export async function GET(request: NextRequest) {
     }
 
     const yaml = ClashTemplate.build(proxies)
+    try { YAML.parse(yaml) } catch {
+      return new NextResponse('Generated YAML invalid', { status: 500 })
+    }
 
     return new NextResponse(yaml, {
       status: 200,

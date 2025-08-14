@@ -118,7 +118,8 @@ export class ClashTemplate {
       }
     }
 
-    return lines.map((l) => (l.startsWith('- ') ? l : `  ${l}`)).join('\n')
+    // 缩进到 proxies: 之下，YAML 需要在 key 下至少多两个空格
+    return lines.map((l) => `  ${l}`).join('\n')
   }
 
   private static escapeYaml(value: string | number | boolean | undefined | null): string {
