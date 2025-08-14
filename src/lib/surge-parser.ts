@@ -74,6 +74,10 @@ function isValidObfsMethod(method: string): boolean {
 export interface ParseResult {
   success: SurgeNode[];
   failed: string[];
+  skipped?: {
+    comments: number;
+    duplicates: number;
+  };
 }
 
 /**
@@ -168,17 +172,53 @@ export function parseSurgeNodes(input: string): ParseResult {
   const lines = input.split('\n').filter(line => line.trim());
   const success: SurgeNode[] = [];
   const failed: string[] = [];
+  const seenNodes = new Set<string>(); // 用于去重的 Set
+  let commentsCount = 0;
+  let duplicatesCount = 0;
 
   for (const line of lines) {
-    const parsed = parseSurgeNode(line);
+    const trimmedLine = line.trim();
+    
+    // 跳过注释行（以 # 开头）
+    if (trimmedLine.startsWith('#')) {
+      commentsCount++;
+      continue;
+    }
+    
+    // 跳过空行
+    if (!trimmedLine) {
+      continue;
+    }
+
+    const parsed = parseSurgeNode(trimmedLine);
     if (parsed) {
-      success.push(parsed);
+      // 创建节点的唯一标识符用于去重
+      const nodeKey = `${parsed.server}:${parsed.port}:${parsed.encryptMethod}:${parsed.password}`;
+      
+      // 检查是否已存在相同的节点
+      if (!seenNodes.has(nodeKey)) {
+        seenNodes.add(nodeKey);
+        success.push(parsed);
+      } else {
+        duplicatesCount++;
+      }
+      // 如果是重复节点，直接跳过，不添加到失败列表
     } else {
-      failed.push(line);
+      failed.push(trimmedLine);
     }
   }
 
-  return { success, failed };
+  const result: ParseResult = { success, failed };
+  
+  // 只有在有跳过的内容时才添加 skipped 信息
+  if (commentsCount > 0 || duplicatesCount > 0) {
+    result.skipped = {
+      comments: commentsCount,
+      duplicates: duplicatesCount
+    };
+  }
+
+  return result;
 }
 
 /**
